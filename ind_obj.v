@@ -105,19 +105,19 @@ Section IndistinguishableObjectives.
 Variable Play : Type.
 Let U := Play.
 
-Infix "∩" := (Intersection U) (at level 40, left associativity).
-Infix "∪" := (Union U) (at level 50, left associativity).
-Infix "⊆" := (Included U) (at level 55, right associativity).
-Notation "x ∈ S" := (In U S x) (at level 55, right associativity).
+Infix "∩" := (Intersection U)  (at level 40, left associativity).
+Infix "∪" := (Union U)         (at level 50, left associativity).
+Infix "⊆" := (Included U)      (at level 55, no associativity).
+Notation "x ∈ S" := (In U S x) (at level 55, no associativity).
 Notation "¬ x" := (Complement U x) (at level 35).
 
 Definition Omega := Ensemble Play.
 Variable winnablep : Ensemble Omega.
 
-Infix ".∩" := (Intersection Omega) (at level 40, left associativity).
-Infix ".∪" := (Union Omega) (at level 50, left associativity).
-Infix ".⊆" := (Included Omega) (at level 55, right associativity).
-Notation "x .∈ S" := (In Omega S x) (at level 55, right associativity).
+Infix ".∩" := (Intersection Omega)  (at level 40, left associativity).
+Infix ".∪" := (Union Omega)         (at level 50, left associativity).
+Infix ".⊆" := (Included Omega)      (at level 55, no associativity).
+Notation "x .∈ S" := (In Omega S x) (at level 55, no associativity).
 Notation ".¬ x" := (Complement Omega x) (at level 35).
 
 (* Definitions of the Obj's *)
