@@ -425,5 +425,167 @@ Proof.
 Qed.
 
 
+Theorem characterization_of_winning_IS_PGW :
+  forall Op calO,
+  calO .⊆ ObjPGWa Op /\ outp_sigmap ⊆ Op <->
+  outp_sigmap ⊆ Op ∩
+    IntersectionForall calO (fun O => O).
+Proof.
+  intros Op calO.
+  split.
+  - (* -> *)
+  intros [His Hwin].
+  apply characterization_of_indistinguishable_strategy_PGW in His.
+  unfold Included.
+  unfold Included in His.
+  unfold Included in Hwin.
+  intros x Hx.
+  specialize (His x Hx).
+  specialize (Hwin x Hx).
+  apply Intersection_intro; [assumption |].
+  apply IntersectionForall_intro.
+  intros O Ho.
+  destruct His as [x His _].
+  destruct His as [x His].
+  specialize (His O Ho).
+  destruct His as [x His | x His].
+  + (* when x ∈ O ∩ Op *)
+  now destruct His as [x His _].
+  + (* when x ∈ ¬ O ∩ ¬ Op *)
+  destruct His as [x _ His].
+  now apply His in Hwin.
+  - (* <- *)
+  intros Hinc.
+  unfold Included in Hinc.
+  split.
+  + (* to show calO .⊆ ObjPGWa Op *)
+  apply characterization_of_indistinguishable_strategy_PGW.
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  destruct Hinc as [x Hxop Hxo].
+  destruct Hxo as [x Hxo].
+  apply Intersection_intro;
+  apply IntersectionForall_intro;
+  intros O Ho;
+  [apply Union_introl | destruct Ho as [O Ho _]];
+  specialize (Hxo O Ho);
+  now apply Intersection_intro.
+  + (* to show outp_sigmap ⊆ Op *)
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  now destruct Hinc as [x Hxop _].
+Qed.
+
+Theorem characterization_of_winning_IS_PW :
+  forall Op calO,
+  calO .⊆ ObjPWa Op /\ outp_sigmap ⊆ Op <->
+  outp_sigmap ⊆ Op ∩
+    IntersectionForall calO (fun O => O).
+Proof.
+  intros Op calO.
+  split.
+  - (* -> *)
+  intros [His Hwin].
+  apply characterization_of_indistinguishable_strategy_PW in His.
+  unfold Included.
+  unfold Included in His.
+  unfold Included in Hwin.
+  intros x Hx.
+  specialize (His x Hx).
+  specialize (Hwin x Hx).
+  apply Intersection_intro; [assumption |].
+  apply IntersectionForall_intro.
+  intros O Ho.
+  destruct His as [x His].
+  specialize (His O Ho).
+  destruct His as [x His | x His].
+  + (* when x ∈ O ∩ Op *)
+  now destruct His as [x His _].
+  + (* when x ∈ ¬ O ∩ ¬ Op *)
+  destruct His as [x _ His].
+  now apply His in Hwin.
+  - (* <- *)
+  intros Hinc.
+  unfold Included in Hinc.
+  split.
+  + (* to show calO .⊆ ObjPWa Op *)
+  apply characterization_of_indistinguishable_strategy_PW.
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  destruct Hinc as [x Hxop Hxo].
+  destruct Hxo as [x Hxo].
+  apply IntersectionForall_intro.
+  intros O Ho.
+  apply Union_introl.
+  specialize (Hxo O Ho).
+  now apply Intersection_intro.
+  + (* to show outp_sigmap ⊆ Op *)
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  now destruct Hinc as [x Hxop _].
+Qed.
+
+Theorem characterization_of_winning_IS_GW :
+  forall Op calO,
+  calO .⊆ ObjGWa Op /\ outp_sigmap ⊆ Op <->
+  outp_sigmap ⊆ Op.
+Proof.
+  intros Op calO.
+  split.
+  - (* -> *)
+  now intros [_ Hwin].
+  - (* <- *)
+  intros Hinc.
+  split; [| assumption].
+  apply characterization_of_indistinguishable_strategy_GW.
+  unfold Included.
+  unfold Included in Hinc.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  apply IntersectionForall_intro.
+  intros O Ho.
+  apply Hinc.
+Qed.
+
+Theorem characterization_of_winning_IS_PG :
+  forall Op calO,
+  calO .⊆ ObjPGa Op /\ outp_sigmap ⊆ Op <->
+  outp_sigmap ⊆ Op ∩
+    IntersectionForall (calO .∩ winnablep) (fun O => O).
+Proof.
+  intros Op calO.
+  split.
+  - (* -> *)
+  intros [His Hwin].
+  apply characterization_of_indistinguishable_strategy_PG in His.
+  unfold Included.
+  unfold Included in His.
+  unfold Included in Hwin.
+  intros x Hx.
+  specialize (His x Hx).
+  specialize (Hwin x Hx).
+  apply Intersection_intro; assumption.
+  - (* <- *)
+  intros Hinc.
+  unfold Included in Hinc.
+  split.
+  + (* to show calO .⊆ ObjPGa Op *)
+  apply characterization_of_indistinguishable_strategy_PG.
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  destruct Hinc as [x Hxop Hxo].
+  apply Hxo.
+  + (* to show outp_sigmap ⊆ Op *)
+  unfold Included.
+  intros x Hx.
+  specialize (Hinc x Hx).
+  now destruct Hinc as [x Hxop _].
+Qed.
+
 End IndistinguishableObjectives.
 
