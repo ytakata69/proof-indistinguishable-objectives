@@ -12,7 +12,8 @@ all: $(targets)
 
 doc: $(vobjs)
 	test -d $(docdir) || mkdir $(docdir)
-	coqdoc --gallina --utf8 -d $(docdir) $(srcs)
+	coqdoc -g --utf8 -d $(docdir) $(srcs)
+	-cp $(docdir)/mycoqdoc.css $(docdir)/coqdoc.css
 
 clean:
 	$(RM) *.vo *.vo[ks] *.glob .*.aux *~
