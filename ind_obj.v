@@ -15,14 +15,6 @@ Infix "⊆" := (Included U)      (at level 55, no associativity).
 Notation "x ∈ S" := (In U S x) (at level 55, no associativity).
 Notation "¬ x" := (Complement U x) (at level 35).
 
-Lemma set_and_its_complement_are_disjoint :
-  forall (A : Ensemble U) x, ~ (x ∈ A /\ x ∈ ¬ A).
-Proof.
-  unfold Complement, In.
-  intros A x [Ax nAx].
-  now apply nAx.
-Qed.
-
 Lemma subset_of_each_is_subset_of_intersection :
   forall A B C,
   C ⊆ A /\ C ⊆ B <-> C ⊆ A ∩ B.
