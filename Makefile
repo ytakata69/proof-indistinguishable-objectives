@@ -1,4 +1,4 @@
-srcs = ind_obj.v
+srcs = ind_obj.v outcome.v
 docdir = ./docs
 vobjs = $(srcs:.v=.vo)
 targets = $(vobjs)
@@ -9,6 +9,8 @@ targets = $(vobjs)
 
 default: $(targets)
 all: $(targets)
+
+outcome.vo: ind_obj.vo
 
 doc: $(vobjs)
 	test -d $(docdir) || mkdir $(docdir)
