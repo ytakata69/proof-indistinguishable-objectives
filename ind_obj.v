@@ -136,12 +136,12 @@ Inductive ObjGW' (Op : Omega) (rho : Play) : Ensemble Omega :=
 
 Inductive ObjPG' (Op : Omega) (rho : Play) : Ensemble Omega :=
 | ObjPG'_intro : forall O,
-  (rho ∈ O /\ O <> ∅) \/ (rho ∈ ¬ O /\ O .∈ .¬ winnablep)
+  rho ∈ O \/ (rho ∈ ¬ O /\ O .∈ .¬ winnablep)
   -> O .∈ ObjPG' Op rho.
 
 Inductive ObjPGW' (Op : Omega) (rho : Play) : Ensemble Omega :=
 | ObjPGW'_intro : forall O,
-  (rho ∈ O /\ rho ∈ Op /\ O <> ∅) \/
+  (rho ∈ O /\ rho ∈ Op) \/
   (rho ∈ ¬ O /\ rho ∈ ¬ Op /\ O .∈ .¬ winnablep)
   -> O .∈ ObjPGW' Op rho.
 
@@ -169,8 +169,7 @@ Inductive ObjPGW (Op : Omega) (rho : Play) : Ensemble Omega :=
  * definitions are the same.
  *)
 Theorem ObjPW_eq_ObjPW' :
-  forall Op rho,
-  ObjPW Op rho = ObjPW' Op rho.
+  forall Op rho, ObjPW Op rho = ObjPW' Op rho.
 Proof.
   intros Op rho.
   apply Extensionality_Ensembles.
@@ -204,8 +203,7 @@ Proof.
 Qed.
 
 Theorem ObjGW_eq_ObjGW' :
-  forall Op rho,
-  ObjGW Op rho = ObjGW' Op rho.
+  forall Op rho, ObjGW Op rho = ObjGW' Op rho.
 Proof.
   intros Op rho.
   apply Extensionality_Ensembles.
@@ -244,8 +242,7 @@ Proof.
 Qed.
 
 Theorem ObjPG_eq_ObjPG' :
-  forall Op rho,
-  ObjPG Op rho = ObjPG' Op rho.
+  forall Op rho, ObjPG Op rho = ObjPG' Op rho.
 Proof.
   intros Op rho.
   apply Extensionality_Ensembles.
@@ -258,10 +255,7 @@ Proof.
   clear O' EQO' H.
   destruct (In_dec _ O rho) as [Ho | Ho].
   + (* when rho ∈ O *)
-  left. split; [assumption |].
-  intros Hemp.
-  rewrite Hemp in Ho.
-  inversion Ho.
+  now left.
   + (* when rho ∈ ¬ O *)
   right. split; [assumption |].
   intros Hwin.
@@ -272,8 +266,7 @@ Proof.
   inversion H as [O' H' EQO'];
   clear O' EQO' H.
   destruct H' as [H | H].
-  + (* when rho ∈ O /\ O <> ∅ *)
-  destruct H as [H1 H2].
+  + (* when rho ∈ O *)
   now intros Hwin.
   + (* when rho ∈ ¬ O /\ O .∈ .¬ winnablep *)
   destruct H as [H1 H2].
@@ -282,8 +275,7 @@ Proof.
 Qed.
 
 Theorem ObjPGW_eq_ObjPGW' :
-  forall Op rho,
-  ObjPGW Op rho = ObjPGW' Op rho.
+  forall Op rho, ObjPGW Op rho = ObjPGW' Op rho.
 Proof.
   intros Op rho.
   apply Extensionality_Ensembles.
@@ -298,10 +290,7 @@ Proof.
   destruct H1 as [rho Hop | rho Hop].
   + (* when rho ∈ O ∩ Op *)
   destruct Hop as [rho Ho Hop].
-  left. split; [| split]; try assumption.
-  intros Hemp.
-  rewrite Hemp in Ho.
-  inversion Ho.
+  left. now split.
   + (* when rho ∈ ¬ O ∩ ¬ Op *)
   destruct Hop as [rho Ho Hop].
   right. split; [| split]; try assumption.
@@ -314,8 +303,8 @@ Proof.
   inversion H as [O' H' EQO'];
   clear O' EQO' H.
   destruct H' as [H | H].
-  + (* when rho ∈ O /\ rho ∈ Op /\ O <> ∅ *)
-  destruct H as [H1 [H2 H3]].
+  + (* when rho ∈ O /\ rho ∈ Op *)
+  destruct H as [H1 H2].
   split.
   * (* to show rho ∈ O ∩ Op ∪ ¬ O ∩ ¬ Op *)
   apply Union_introl.
@@ -340,8 +329,7 @@ Qed.
  *)
 
 Lemma included_ObjPGW_ObjPW :
-  forall Op rho,
-  ObjPGW Op rho .⊆ ObjPW Op rho.
+  forall Op rho, ObjPGW Op rho .⊆ ObjPW Op rho.
 Proof.
   intros Op rho.
   unfold Included, In.
@@ -352,8 +340,7 @@ Proof.
 Qed.
 
 Lemma included_ObjPGW_ObjGW :
-  forall Op rho,
-  ObjPGW Op rho .⊆ ObjGW Op rho.
+  forall Op rho, ObjPGW Op rho .⊆ ObjGW Op rho.
 Proof.
   intros Op rho.
   unfold Included, In.
@@ -373,8 +360,7 @@ Proof.
 Qed.
 
 Lemma included_ObjPGW_ObjPG :
-  forall Op rho,
-  ObjPGW Op rho .⊆ ObjPG Op rho.
+  forall Op rho, ObjPGW Op rho .⊆ ObjPG Op rho.
 Proof.
   intros Op rho.
   unfold Included, In.
@@ -401,8 +387,7 @@ Qed.
 
 Lemma included_others_ObjPGW :
   forall Op rho,
-  (ObjPW Op rho) .∩ (ObjGW Op rho) .∩ (ObjPG Op rho)
-  .⊆ ObjPGW Op rho.
+  (ObjPW Op rho) .∩ (ObjGW Op rho) .∩ (ObjPG Op rho) .⊆ ObjPGW Op rho.
 Proof.
   intros Op rho.
   unfold Included.
@@ -426,8 +411,7 @@ Qed.
 
 Theorem ObjPGW_equals_intersection_of_others :
   forall Op rho,
-  ObjPGW Op rho =
-  (ObjPW Op rho) .∩ (ObjGW Op rho) .∩ (ObjPG Op rho).
+  ObjPGW Op rho = (ObjPW Op rho) .∩ (ObjGW Op rho) .∩ (ObjPG Op rho).
 Proof.
   intros Op rho.
   apply Extensionality_Ensembles.
