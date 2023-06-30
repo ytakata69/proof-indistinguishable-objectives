@@ -105,16 +105,13 @@ Notation "¬ x" := (Complement U x) (at level 35).
 Notation "∅" := (Empty_set U).
 
 Definition Omega := Ensemble Play.
+Variable winnablep : Ensemble Omega.
 
 Infix ".∩" := (Intersection Omega)  (at level 40, left associativity).
 Infix ".∪" := (Union Omega)         (at level 50, left associativity).
 Infix ".⊆" := (Included Omega)      (at level 55, no associativity).
 Notation "x .∈ S" := (In Omega S x) (at level 55, no associativity).
 Notation ".¬ x" := (Complement Omega x) (at level 35).
-
-Variable winnablep : Ensemble Omega.
-Hypothesis empty_objective_is_not_winnable :
-  ∅ .∈ .¬ winnablep.
 
 (* Original definitions of the Obj's *)
 Inductive ObjPW' (Op : Omega) (rho : Play) : Ensemble Omega :=
