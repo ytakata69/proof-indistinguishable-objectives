@@ -37,6 +37,16 @@ Proof.
   assumption.
 Qed.
 
+Lemma transitivity_inclusion :
+  forall A B C,
+  A ⊆ B -> B ⊆ C -> A ⊆ C.
+Proof.
+  unfold Included.
+  intros A B C ab bc x xa.
+  apply bc.
+  now apply ab.
+Qed.
+
 (* We assume here that whether x ∈ A or not is decidable for every A and x. *)
 Axiom In_dec :
   forall (A : Ensemble U) x, {x ∈ A} + {x ∈ ¬ A}.
@@ -439,6 +449,20 @@ Definition ObjPGa (Op : Omega) : Ensemble Omega :=
 Definition ObjPGWa (Op : Omega) : Ensemble Omega :=
   IntersectionForall outp_sigmap (ObjPGW Op).
 
+Lemma included_ObjPGWa_ObjGWa :
+  forall Op, ObjPGWa Op .⊆ ObjGWa Op.
+Proof.
+  intros Op.
+  unfold Included, In.
+  intros O H.
+  destruct H as [O H].
+  unfold ObjGWa.
+  apply IntersectionForall_intro.
+  intros rho Hrho.
+  specialize (H rho Hrho).
+  now apply included_ObjPGW_ObjGW.
+Qed.
+
 (*
  * Showing the equivalence between calO-indistinguishability and
  * the existence of a winning strategy
@@ -835,6 +859,66 @@ Proof.
   intros x Hx.
   specialize (Hinc x Hx).
   now destruct Hinc as [x Hxop _].
+Qed.
+
+Theorem no_IS_GW_between_empty_and_winnable :
+  (exists rho, rho ∈ outp_sigmap) ->
+  forall Op calO,
+  ∅ .∈ calO ->
+  (exists O, O .∈ winnablep /\ O .∈ calO)
+  -> ~ calO .⊆ ObjGWa Op.
+Proof.
+  intros [rho Hrho];
+  intros Op calO He [Ow [How Howo]] Hobj.
+  unfold Included in Hobj.
+  specialize (Hobj ∅ He) as Heobj.
+  specialize (Hobj Ow Howo) as Hwobj.
+
+  inversion Heobj as [O' Heobj' EQO'];
+  clear O' EQO' Heobj Hobj.
+  specialize (Heobj' rho Hrho).
+  inversion Heobj' as [O' Heobj EQO'];
+  clear O' EQO' Heobj'.
+  destruct Heobj as [_ Heobj].
+  assert (Hee : ∅ = ∅). { reflexivity. }
+  specialize (Heobj Hee); clear Hee.
+
+  inversion Hwobj as [O' Hwobj' EQO'];
+  clear O' EQO' Hwobj.
+  specialize (Hwobj' rho Hrho).
+  inversion Hwobj' as [O' Hwobj EQO'];
+  clear O' EQO' Hwobj'.
+  destruct Hwobj as [Hwobj _].
+  specialize (Hwobj How).
+  now apply Heobj in Hwobj.
+Qed.
+
+Theorem no_IS_PGW_between_empty_and_winnable :
+  (exists rho, rho ∈ outp_sigmap) ->
+  forall Op calO,
+  ∅ .∈ calO ->
+  (exists O, O .∈ winnablep /\ O .∈ calO)
+  -> ~ calO .⊆ ObjPGWa Op.
+Proof.
+  intros Hrho;
+  intros Op calO He How Hobj.
+  apply (transitivity_inclusion _ calO _ (ObjGWa Op)) in Hobj.
+  now apply (no_IS_GW_between_empty_and_winnable Hrho Op calO He How)
+    in Hobj.
+  apply included_ObjPGWa_ObjGWa.
+Qed.
+
+Theorem IS_PG_should_contain_empty :
+  (∅ .∈ .¬ winnablep) ->
+  forall Op, ∅ .∈ ObjPGa Op.
+Proof.
+  intros Hnw Op.
+  unfold ObjPGa.
+  apply IntersectionForall_intro.
+  intros rho Hrho.
+  apply ObjPG_intro.
+  intros Hw.
+  now apply Hnw in Hw.
 Qed.
 
 End IndistinguishableObjectives.
