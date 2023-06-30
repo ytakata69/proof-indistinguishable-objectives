@@ -921,5 +921,235 @@ Proof.
   now apply Hnw in Hw.
 Qed.
 
+(*
+ * Showing the equivalence between
+ * objective-indistinguishability equilibrium and
+ * simultaneous Nash equilibrium
+ *)
+
+Theorem characterization_of_OIE_PGW :
+  forall Op,
+  (forall rho rho',
+   ObjPGW Op rho' .⊆ ObjPGW Op rho) <->
+  (forall rho rho' O,
+    (O .∈ winnablep ->
+      (rho' ∈ O ∩ Op ->
+       rho  ∈ O ∩ Op)) /\
+    (O .∈ .¬ winnablep ->
+      (rho' ∈ (O ∩ Op) ∪ (¬ O ∩ ¬ Op) ->
+       rho  ∈ (O ∩ Op) ∪ (¬ O ∩ ¬ Op)))).
+Proof.
+  intros Op.
+  split;
+  intros H.
+  - (* -> *)
+  intros rho rho' O.
+  specialize (H rho rho').
+  unfold Included in H.
+  specialize (H O).
+  split.
+  + (* when O .∈ winnablep *)
+  intros Hw Hrho'.
+  assert (Ho : O .∈ ObjPGW Op rho').
+  * (* to show Ho *)
+  apply ObjPGW_intro.
+  split; [apply Union_introl | intros _];
+  assumption.
+  * (* to show the rest *)
+  specialize (H Ho).
+  inversion H as [O' H' EQO'];
+  clear O' EQO'.
+  destruct H' as [_ H'].
+  apply H'; apply Hw.
+  + (* when O .∈ .¬ winnablep *)
+  intros Hw Hrho'.
+  assert (Ho : O .∈ ObjPGW Op rho').
+  * (* to show Ho *)
+  apply ObjPGW_intro.
+  split; [assumption |].
+  intros Hw'. now apply Hw in Hw'.
+  * (* to show the rest *)
+  specialize (H Ho).
+  inversion H as [O' H' EQO'];
+  clear O' EQO'.
+  now destruct H' as [H' _].
+
+  - (* <- *)
+  unfold Included.
+  intros rho rho' O.
+  specialize (H rho rho' O).
+  destruct H as [H1 H2].
+  intros Ho.
+  inversion Ho as [O' Ho' EQO'];
+  clear O' EQO' Ho.
+  destruct Ho' as [Ho1 Ho2].
+  destruct (In_dec _ winnablep O) as [How | How].
+  + (* when O .∈ winnablep *)
+  specialize (Ho2 How).
+  specialize (H1 How Ho2).
+  clear H2 Ho1 Ho2.
+  apply ObjPGW_intro.
+  split.
+  * (* to show rho ∈ O ∩ Op ∪ ¬ O ∩ ¬ Op *)
+  now apply Union_introl.
+  * (* to show O .∈ winnablep -> rho ∈ O ∩ Op *)
+  now intros _.
+  + (* when O .∈ .¬ winnablep *)
+  specialize (H2 How Ho1).
+  clear H1 Ho1 Ho2.
+  apply ObjPGW_intro.
+  split; [assumption |].
+  intros How'.
+  now apply How in How'.
+Qed.
+
+Theorem characterization_of_OIE_PW :
+  forall Op,
+  (forall rho rho',
+   ObjPW Op rho' .⊆ ObjPW Op rho) <->
+  (forall rho rho' O,
+    rho' ∈ (O ∩ Op) ∪ (¬ O ∩ ¬ Op) ->
+    rho  ∈ (O ∩ Op) ∪ (¬ O ∩ ¬ Op)).
+Proof.
+  intros Op.
+  split;
+  intros H.
+  - (* -> *)
+  intros rho rho' O Hrho'.
+  specialize (H rho rho').
+  unfold Included in H.
+  specialize (H O).
+  assert (Ho : O .∈ ObjPW Op rho').
+  { now apply ObjPW_intro. }
+  specialize (H Ho).
+  now inversion H as [O' H' EQO'].
+  - (* <- *)
+  unfold Included.
+  intros rho rho' O Hrho'.
+  specialize (H rho rho' O).
+  apply ObjPW_intro.
+  apply H.
+  now inversion Hrho'.
+Qed.
+
+Theorem characterization_of_OIE_GW :
+  (∅ .∈ .¬ winnablep) ->
+  forall Op,
+  (forall rho rho',
+   ObjGW Op rho' .⊆ ObjGW Op rho) <->
+  (forall rho rho' O,
+    (O .∈ winnablep ->
+      (rho' ∈ Op ->
+       rho  ∈ Op)) /\
+    (O = ∅ ->
+      (rho' ∈ ¬ Op ->
+       rho  ∈ ¬ Op))).
+Proof.
+  intros Hew;
+  intros Op.
+  split;
+  intros H.
+  - (* -> *)
+  intros rho rho' O.
+  specialize (H rho rho').
+  unfold Included in H.
+  specialize (H O).
+  split.
+  + (* when O .∈ winnablep *)
+  intros Hw Hrho'.
+  assert (Ho : O .∈ ObjGW Op rho').
+  * (* to show Ho *)
+  apply ObjGW_intro.
+  split; [now intros _ |].
+  intros EQO.
+  rewrite EQO in Hw.
+  now apply Hew in Hw.
+  * (* to show the rest *)
+  specialize (H Ho).
+  inversion H as [O' H' EQO'];
+  clear O' EQO'.
+  destruct H' as [H' _].
+  apply H'; apply Hw.
+  + (* when O = ∅ *)
+  intros Hw Hrho'.
+  assert (Ho : O .∈ ObjGW Op rho').
+  * (* to show Ho *)
+  apply ObjGW_intro.
+  split; [| now intros _].
+  intros Hw'.
+  rewrite Hw in Hw'.
+  now apply Hew in Hw'.
+  * (* to show the rest *)
+  specialize (H Ho).
+  inversion H as [O' H' EQO'];
+  clear O' EQO'.
+  destruct H' as [_ H'].
+  now apply H'.
+
+  - (* <- *)
+  unfold Included.
+  intros rho rho' O.
+  specialize (H rho rho' O).
+  destruct H as [H1 H2].
+  intros Ho.
+  inversion Ho as [O' Ho' EQO'];
+  clear O' EQO' Ho.
+  destruct Ho' as [Ho1 Ho2].
+  destruct (In_dec _ winnablep O) as [How | How].
+  + (* when O .∈ winnablep *)
+  specialize (Ho1 How).
+  specialize (H1 How Ho1).
+  clear H2 Ho1 Ho2.
+  apply ObjGW_intro.
+  split.
+  * now intros _.
+  * intros EQO. rewrite EQO in How. now apply Hew in How.
+  + (* when O .∈ .¬ winnablep *)
+  apply ObjGW_intro.
+  split.
+  * intros Hw. now apply How in Hw.
+  * intros EQO. apply (H2 EQO). now apply Ho2.
+Qed.
+
+Theorem characterization_of_OIE_PG :
+  forall Op,
+  (forall rho rho',
+   ObjPG Op rho' .⊆ ObjPG Op rho) <->
+  (forall rho rho' O,
+    O .∈ winnablep ->
+      (rho' ∈ O ->
+       rho  ∈ O)).
+Proof.
+  intros Op.
+  split;
+  intros H.
+  - (* -> *)
+  intros rho rho' O.
+  specialize (H rho rho').
+  unfold Included in H.
+  specialize (H O).
+  intros Hw Hrho'.
+  assert (Ho : O .∈ ObjPG Op rho').
+  * (* to show Ho *)
+  apply ObjPG_intro.
+  now intros _.
+  * (* to show the rest *)
+  specialize (H Ho).
+  inversion H as [O' H' EQO'];
+  clear O' EQO'.
+  apply (H' Hw).
+
+  - (* <- *)
+  unfold Included.
+  intros rho rho' O.
+  specialize (H rho rho' O).
+  intros Ho.
+  inversion Ho as [O' Ho' EQO'];
+  clear O' EQO' Ho.
+  apply ObjPG_intro.
+  intros Hw.
+  apply (H Hw (Ho' Hw)).
+Qed.
+
 End IndistinguishableObjectives.
 
