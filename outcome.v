@@ -139,6 +139,32 @@ Proof.
   apply In_singleton.
 Qed.
 
+Theorem outp_is_not_empty :
+  forall p sigma, outp p (sigma p) <> Empty_set _.
+Proof.
+  intros p sigma He.
+  assert (Ho := out_equals_intersection_of_outp sigma).
+  assert (He' : IntersectionForall allP (fun p => outp p (sigma p)) = Empty_set _).
+  - (* to show He' *)
+  apply Extensionality_Ensembles.
+  unfold Same_set, Included.
+  split;
+  intros rho Hrho.
+  + inversion Hrho as [rho' Hrho' EQrho'];
+  clear rho' EQrho'.
+  assert (Hp : In _ allP p).
+  { apply allP_intro. }
+  specialize (Hrho' p Hp).
+  rewrite He in Hrho'.
+  inversion Hrho'.
+  + inversion Hrho.
+  - (* to show the rest *)
+  rewrite He' in Ho.
+  assert (Hne := In_singleton _ (out sigma)).
+  rewrite Ho in Hne.
+  inversion Hne.
+Qed.
+
 
 (* the updated strategy profile *)
 Definition update (sigma : Sigma) (p : P) (sigmap : SigmaP)
