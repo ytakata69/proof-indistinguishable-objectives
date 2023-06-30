@@ -17,9 +17,7 @@ Parameter V : Set. (* the set of vertices *)
 Parameter v0 : V.
 Parameter player : V -> P. (* the controller of a vertex *)
 
-(* the set of all players *)
-Inductive allP : Ensemble P :=
-  allP_intro : forall p : P, In _ allP p.
+Definition allP := Full_set P. (* the set of all players *)
 
 (*
  * A strategy is a function from history to vertex.
@@ -113,7 +111,7 @@ Proof.
   induction i as [| i IH].
   * (* when i = 0 *)
   assert (Hp0 : In _ allP (player v0)).
-  { apply allP_intro. }
+  { apply Full_intro. }
   specialize (Hrho' (player v0) Hp0).
   inversion Hrho' as [p' sigmap rho' Hrho0 Hrho EQp' EQsigmap EQrho'];
   clear p' EQp' sigmap EQsigmap rho' EQrho'.
@@ -122,7 +120,7 @@ Proof.
   destruct (destruct_out sigma i) as [h [l Hhl]].
   remember (player h) as p eqn:EQp.
   assert (Hp : In _ allP p).
-  { apply allP_intro. }
+  { apply Full_intro. }
   specialize (Hrho' p Hp).
   inversion Hrho' as [p' sigmap rho' Hrho0 Hrho EQp' EQsigmap EQrho'];
   clear p' EQp' sigmap EQsigmap rho' EQrho'.
@@ -153,7 +151,7 @@ Proof.
   + inversion Hrho as [rho' Hrho' EQrho'];
   clear rho' EQrho'.
   assert (Hp : In _ allP p).
-  { apply allP_intro. }
+  { apply Full_intro. }
   specialize (Hrho' p Hp).
   rewrite He in Hrho'.
   inversion Hrho'.
