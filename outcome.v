@@ -8,13 +8,46 @@ Require Import Sets.Ensembles.
 Require Import Arith.
 Require Import ind_obj.
 
+Section PreliminariesOnListsAndEnsembles.
+
+(* prefix of length n *)
+Fixpoint take {T : Type} (n : nat) (l : list T) : list T :=
+  match n, l with
+  | 0, _   => nil
+  | _, nil => nil
+  | S n', h :: t => h :: take n' t
+  end.
+
+Variable T : Type.
+Variable A : Ensemble T.
+
+Lemma empty_is_subset_of_any :
+  Included _ (Empty_set T) A.
+Proof.
+  unfold Included.
+  intros x Hx.
+  inversion Hx.
+Qed.
+
+Lemma subset_of_empty_is_empty :
+  Included _ A (Empty_set _) ->
+  A = Empty_set T.
+Proof.
+  intros Ha.
+  apply Extensionality_Ensembles.
+  unfold Same_set.
+  split; [assumption |].
+  apply empty_is_subset_of_any.
+Qed.
+
+End PreliminariesOnListsAndEnsembles.
+
 Section Outcome.
 
 (* To show the relationship between out and out^p *)
 
 Definition P := nat. (* the set of players *)
 Parameter V : Set. (* the set of vertices *)
-Parameter v0 : V.
 Parameter player : V -> P. (* the controller of a vertex *)
 
 Definition allP := Full_set P. (* the set of all players *)
@@ -33,6 +66,7 @@ Axiom extensionality_Play :
   forall rho rho' : Play,
   (forall i, rho i = rho' i) -> rho = rho'.
 
+Variable v0 : V.
 Fixpoint out (sigma : Sigma) (i : nat) : list V :=
   match i with
   | 0 => v0 :: nil
@@ -67,6 +101,38 @@ Proof.
   - now apply out_is_not_nil in Hrho.
 Qed.
 
+Lemma length_of_out :
+  forall sigma i,
+  length (out sigma i) = S i.
+Proof.
+  intros sigma.
+  induction i as [| i IH].
+  - (* when i = 0 *)
+  reflexivity.
+  - (* when i > 0 *)
+  simpl.
+  now rewrite IH.
+Qed.
+
+Lemma out_is_in_outp :
+  forall (sigma : Sigma) (p : P),
+  In _ (outp p (sigma p)) (out sigma).
+Proof.
+  intros sigma p.
+  apply outp_intro.
+  - (* to show out sigma 0 = v0 :: nil *)
+  reflexivity.
+  - (* to show the rest *)
+  intros i h l EQhl EQp.
+  destruct i as [| i];
+  unfold out in EQhl;
+  injection EQhl;
+  intros EQl EQh;
+  unfold out;
+  rewrite <- EQh, EQl, EQp;
+  reflexivity.
+Qed.
+
 Theorem out_equals_intersection_of_outp :
   forall sigma : Sigma,
   Singleton _ (out sigma) =
@@ -83,23 +149,7 @@ Proof.
   clear Hx x Hx'.
   apply IntersectionForall_intro.
   intros p Hallp.
-  apply outp_intro;
-  [reflexivity |].
-
-  destruct i as [| i].
-  + (* when i = 0 *)
-  simpl.
-  intros h l EQhl EQp.
-  injection EQhl; intros EQl EQh.
-  rewrite EQp, EQl, EQh.
-  reflexivity.
-  + (* when i > 0 *)
-  intros h l EQhl EQp.
-  simpl in EQhl.
-  injection EQhl; intros EQl EQh.
-  simpl.
-  rewrite EQp, EQl, EQh.
-  reflexivity.
+  apply out_is_in_outp.
 
   - (* ⊇ *)
   intros rho Hrho.
@@ -243,4 +293,203 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma out_update_sigma_is_in_outp :
+  forall p sigma sigmap,
+  In _ (outp p sigmap) (out (update sigma p sigmap)).
+Proof.
+  intros p sigma sigmap.
+  rewrite outp_equals_outp_alt.
+  apply outp_alt_intro.
+Qed.
+
+Definition Omega := Ensemble Play.
+
+Inductive winnable (p : P) : Ensemble Omega :=
+| winnable_intro : forall O,
+  (exists (sigma : Sigma),
+    Included _ (outp p (sigma p)) O)
+  -> In _ (winnable p) O.
+
+Lemma empty_is_not_winnable :
+  forall p, ~ In _ (winnable p) (Empty_set _).
+Proof.
+  intros p Hw.
+  inversion Hw as [O Hw' EQO];
+  clear O EQO Hw.
+  destruct Hw' as [sigma Hw].
+  unfold Included in Hw.
+  specialize (Hw (out sigma)).
+  specialize (Hw (out_is_in_outp sigma p)).
+  inversion Hw.
+Qed.
+
+Definition NashEq (sigma : Sigma) (alpha : P -> Omega) : Prop :=
+  forall (p : P) (sigmap : SigmaP),
+  In _ (alpha p) (out (update sigma p sigmap)) ->
+  In _ (alpha p) (out sigma).
+
 End Outcome.
+
+Section DropPrefix.
+
+Let U := Play.
+Infix "∩" := (Intersection U)  (at level 40, left associativity).
+Infix "∪" := (Union U)         (at level 50, left associativity).
+Infix "⊆" := (Included U)      (at level 55, no associativity).
+Notation "x ∈ S" := (In U S x) (at level 55, no associativity).
+Notation "¬ x" := (Complement U x) (at level 35).
+Notation "∅" := (Empty_set U).
+
+Infix ".∩" := (Intersection Omega)  (at level 40, left associativity).
+Infix ".∪" := (Union Omega)         (at level 50, left associativity).
+Infix ".⊆" := (Included Omega)      (at level 55, no associativity).
+Notation "x .∈ S" := (In Omega S x) (at level 55, no associativity).
+Notation ".¬ x" := (Complement Omega x) (at level 35).
+
+Definition dropPrefix (n : nat) (rho : Play) (i : nat) : list V
+  := take (S i) (rho (n + i)).
+
+Definition prefixIndependent (Op : Omega) : Prop :=
+  forall (rho : Play) (n : nat),
+  rho ∈ Op <-> (dropPrefix n rho) ∈ Op.
+
+(* composition of two strategies *)
+Definition composite (n : nat) (sigmap taup : SigmaP)
+  (l : list V) : V :=
+  if length l <=? n then sigmap l else taup (take (length l - n) l).
+
+Lemma strategy_switching_before :
+  forall v0 p sigma taup n,
+  forall i, i <= n ->
+  out v0 (update sigma p (composite n (sigma p) taup)) i
+    = out v0 sigma i.
+Proof.
+  intros v0 p sigma taup n i Hi.
+  induction i as [| i IH].
+  - (* when i = 0 *)
+  reflexivity.
+  - (* when i > 0 *)
+  apply le_Sn_le in Hi as Hi'.
+  specialize (IH Hi'); clear Hi'.
+  destruct (destruct_out v0 sigma i)
+    as [h [l Hhl]].
+  simpl.
+  unfold update at 1.
+  rewrite IH.
+  rewrite <- Hhl.
+  simpl.
+  destruct (eq_nat_dec p (player h)) as [Hp | Hp].
+  + (* when p = player h *)
+  rewrite <- Hp.
+  rewrite (Nat.eqb_refl p).
+  unfold composite.
+  assert (Hlen : length (h :: l) <= n).
+  { rewrite Hhl. now rewrite length_of_out. }
+  apply Nat.leb_le in Hlen.
+  rewrite Hlen.
+  reflexivity.
+  + (* when p <> player h *)
+  apply Nat.eqb_neq in Hp.
+  rewrite Hp.
+  reflexivity.
+Qed.
+
+Lemma strategy_switching_after :
+  forall _v v0 p sigma taup n,
+  dropPrefix n (out v0 (update sigma p (composite n (sigma p) taup)))
+    ∈ outp (hd _v (out v0 sigma n)) p taup.
+Proof.
+  intros _v v0 p sigma taup n.
+  apply outp_intro.
+  - (* to show at the head *)
+  unfold dropPrefix.
+  rewrite Nat.add_0_r.
+  rewrite strategy_switching_before;
+  [| apply Nat.le_refl].
+  destruct (destruct_out v0 sigma n)
+    as [h [l Hhl]].
+  rewrite <- Hhl.
+  unfold take.
+  reflexivity.
+
+  - (* to show at the rest *)
+  remember (update sigma p (composite n (sigma p) taup))
+  as sigma' eqn:EQsigma'.
+  unfold dropPrefix.
+
+  intros i h l Hhl Hp.
+  destruct (destruct_out v0 sigma' (n + i))
+    as [h' [l' Hhl']].
+  rewrite <- Hhl' in Hhl.
+  unfold take in Hhl.
+  injection Hhl;
+  intros EQl EQh.
+  rewrite <- EQh in Hhl'.
+  clear h' Hhl EQh.
+
+  rewrite Nat.add_succ_r.
+  assert (Hhl'' := Hhl').
+  unfold out in Hhl''.
+  unfold out.
+  rewrite <- Hhl''.
+  clear Hhl''.
+  simpl.
+
+  rewrite EQsigma'.
+  unfold update.
+  apply Nat.eqb_eq in Hp as Hp'.
+  rewrite Hp'.
+  unfold composite.
+  assert (Hlen : length (h :: l') > n).
+  {
+    rewrite Hhl'.
+    rewrite length_of_out.
+    apply le_gt_S.
+    apply le_plus_l.
+  }
+  apply gt_not_le in Hlen.
+  apply Nat.leb_nle in Hlen.
+  rewrite Hlen; clear Hlen.
+  pattern (h :: l') at 1;
+  rewrite Hhl'.
+  rewrite length_of_out.
+  assert (Hi : S (n + i) - n = S i).
+  {
+    rewrite <- Nat.add_succ_r.
+    apply minus_plus.
+  }
+  rewrite Hi.
+  unfold take.
+  rewrite EQl.
+  reflexivity.
+Qed.
+
+Variable v0 : V.
+
+Lemma characterization_of_NE_lr :
+  forall alpha : P -> Omega,
+  (forall p : P, prefixIndependent (alpha p)) ->
+  forall sigma : Sigma,
+    NashEq v0 sigma alpha ->
+    forall (p : P) (i : nat),
+      p = player (hd v0 (out v0 sigma i)) /\
+      alpha p .∈ winnable (hd v0 (out v0 sigma i)) p
+      -> dropPrefix i (out v0 sigma) ∈ alpha p.
+Proof.
+  intros alpha Hpre sigma Hne p i [Hp Hw].
+  unfold prefixIndependent in Hpre.
+  unfold NashEq in Hne.
+
+  inversion Hw as [Op Hw' EQOp];
+  clear Op EQOp Hw.
+  destruct Hw' as [tau Htau].
+  unfold Included in Htau.
+
+  apply (Hpre _ (out v0 sigma) i).
+  apply Hne with (sigmap:=composite i (sigma p) (tau p)).
+  apply Hpre with (n:=i).
+  apply Htau.
+  apply strategy_switching_after.
+Qed.
+
+End DropPrefix.
