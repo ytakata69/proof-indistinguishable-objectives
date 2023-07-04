@@ -468,17 +468,18 @@ Variable v0 : V.
 
 Lemma characterization_of_NE_lr :
   forall alpha : P -> Omega,
-  (forall p : P, prefixIndependent (alpha p)) ->
-  forall sigma : Sigma,
-    NashEq v0 sigma alpha ->
-    forall (p : P) (i : nat),
-      p = player (hd v0 (out v0 sigma i)) /\
-      alpha p .∈ winnable (hd v0 (out v0 sigma i)) p
-      -> dropPrefix i (out v0 sigma) ∈ alpha p.
+    (forall p : P, prefixIndependent (alpha p)) ->
+  forall rho : Play,
+    (exists sigma : Sigma,
+       rho = out v0 sigma /\ NashEq v0 sigma alpha) ->
+  forall (p : P) (i : nat),
+    p = player (hd v0 (rho i)) /\
+    alpha p .∈ winnable (hd v0 (rho i)) p
+    -> dropPrefix i rho ∈ alpha p.
 Proof.
-  intros alpha Hpre sigma Hne p i [Hp Hw].
-  unfold prefixIndependent in Hpre.
-  unfold NashEq in Hne.
+  intros alpha Hpre rho [sigma [EQrho Hne]].
+  rewrite EQrho; clear rho EQrho.
+  intros p i [Hp Hw].
 
   inversion Hw as [Op Hw' EQOp];
   clear Op EQOp Hw.
@@ -491,5 +492,23 @@ Proof.
   apply Htau.
   apply strategy_switching_after.
 Qed.
+
+(*
+Lemma characterization_of_NE_rl :
+  forall alpha : P -> Omega,
+    (forall p : P, prefixIndependent (alpha p)) ->
+  forall rho : Play,
+    (forall (p : P) (i : nat),
+     p = player (hd v0 (rho i)) /\
+     alpha p .∈ winnable (hd v0 (rho i)) p
+     -> dropPrefix i rho ∈ alpha p) ->
+  exists sigma : Sigma,
+    rho = out v0 sigma /\ NashEq v0 sigma alpha.
+Proof.
+  intros alpha Hpre rho Hw.
+  unfold prefixIndependent in Hpre.
+  unfold NashEq.
+Abort.
+*)
 
 End DropPrefix.
